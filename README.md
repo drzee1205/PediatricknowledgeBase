@@ -1,141 +1,205 @@
-# 🚀 Welcome to Z.ai Code Scaffold
+# 🏥 NelsonGPT - AI-Powered Pediatric Medical Assistant
 
-A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
+NelsonGPT is a sophisticated AI-powered medical assistant specifically designed for pediatric healthcare professionals. Built on the foundation of the Nelson Textbook of Pediatrics, it provides evidence-based medical information, differential diagnoses, treatment recommendations, and clinical decision support through advanced AI technologies.
 
-## ✨ Technology Stack
+## 🩺 Key Features
 
-This scaffold provides a robust foundation built with:
+### 🧠 AI-Powered Clinical Tools
+- **Intelligent Chat Interface**: Real-time medical consultations with RAG-enhanced responses
+- **Differential Diagnosis Generator**: AI-driven symptom analysis for pediatric conditions
+- **Treatment Recommendations**: Evidence-based therapeutic guidance with dosing calculations
+- **Drug Dosage Calculator**: Weight-based pediatric medication dosing with safety checks
+- **Clinical Reasoning**: Advanced pathophysiological analysis and decision support
 
-### 🎯 Core Framework
-- **⚡ Next.js 15** - The React framework for production with App Router
-- **📘 TypeScript 5** - Type-safe JavaScript for better developer experience
-- **🎨 Tailwind CSS 4** - Utility-first CSS framework for rapid UI development
+### 🚨 Emergency & Clinical Protocols
+- **Emergency Protocols**: PALS, anaphylaxis management, febrile seizure protocols
+- **Clinical Templates**: Standardized forms for well-child visits, asthma assessment, ADHD evaluation
+- **Medical Education**: AI-generated educational content for various audiences and difficulty levels
 
-### 🧩 UI Components & Styling
-- **🧩 shadcn/ui** - High-quality, accessible components built on Radix UI
-- **🎯 Lucide React** - Beautiful & consistent icon library
-- **🌈 Framer Motion** - Production-ready motion library for React
-- **🎨 Next Themes** - Perfect dark mode in 2 lines of code
+### 📱 Modern Healthcare Interface
+- **Progressive Web App**: Offline capabilities for critical situations
+- **Mobile-Optimized**: Touch-friendly interface with haptic feedback
+- **Voice Input**: Speech recognition for hands-free operation
+- **Citation System**: Proper source attribution from Nelson Textbook
+- **Session Management**: Secure chat history and clinical notes
 
-### 📋 Forms & Validation
-- **🎣 React Hook Form** - Performant forms with easy validation
-- **✅ Zod** - TypeScript-first schema validation
+## 🏗️ Advanced Architecture
 
-### 🔄 State Management & Data Fetching
-- **🐻 Zustand** - Simple, scalable state management
-- **🔄 TanStack Query** - Powerful data synchronization for React
-- **🌐 Axios** - Promise-based HTTP client
+### 🤖 Multi-Model AI Integration
+- **Mistral AI**: Primary medical response generation with clinical reasoning
+- **Google Gemini**: Content enhancement and multimodal analysis
+- **RAG Pipeline**: Retrieval-Augmented Generation with vector embeddings
+- **LangGraph Workflow**: Structured AI processing with clinical validation
 
-### 🗄️ Database & Backend
-- **🗄️ Prisma** - Next-generation Node.js and TypeScript ORM
-- **🔐 NextAuth.js** - Complete open-source authentication solution
-
-### 🎨 Advanced UI Features
-- **📊 TanStack Table** - Headless UI for building tables and datagrids
-- **🖱️ DND Kit** - Modern drag and drop toolkit for React
-- **📊 Recharts** - Redefined chart library built with React and D3
-- **🖼️ Sharp** - High performance image processing
-
-### 🌍 Internationalization & Utilities
-- **🌍 Next Intl** - Internationalization library for Next.js
-- **📅 Date-fns** - Modern JavaScript date utility library
-- **🪝 ReactUse** - Collection of essential React hooks for modern development
-
-## 🎯 Why This Scaffold?
-
-- **🏎️ Fast Development** - Pre-configured tooling and best practices
-- **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
-- **🔒 Type Safety** - Full TypeScript configuration with Zod validation
-- **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
-- **🔐 Auth Included** - NextAuth.js for secure authentication flows
-- **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
-- **🌍 i18n Ready** - Multi-language support with Next Intl
-- **🚀 Production Ready** - Optimized build and deployment settings
-- **🤖 AI-Friendly** - Structured codebase perfect for AI assistance
+### 🔧 Technology Stack
+- **Frontend**: Next.js 15, React 19, TypeScript 5, Tailwind CSS 4
+- **UI Components**: shadcn/ui with complete medical interface components
+- **Backend**: Custom Node.js server with Socket.io for real-time features
+- **Database**: Supabase with Prisma ORM for scalable data management
+- **AI Services**: Mistral API, Google Gemini API, HuggingFace Embeddings
+- **Mobile**: PWA with service worker for offline functionality
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- Node.js 20+ and npm/bun
+- Supabase account for database
+- Mistral API key
+- Google Gemini API key (optional, for enhanced features)
+
+### Installation
+
 ```bash
+# Clone the repository
+git clone https://github.com/drzee1205/PediatricknowledgeBase.git
+cd PediatricknowledgeBase
+
 # Install dependencies
 npm install
+# or
+bun install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys and database URL
+
+# Initialize database
+npx prisma generate
+npx prisma db push
 
 # Start development server
 npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
+# or
+bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see your application running.
+### Environment Variables
 
-## 🤖 Powered by Z.ai
+```bash
+# Database
+DATABASE_URL="your-supabase-database-url"
+NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-supabase-service-key"
 
-This scaffold is optimized for use with [Z.ai](https://chat.z.ai) - your AI assistant for:
+# AI Services
+MISTRAL_API_KEY="your-mistral-api-key"
+GEMINI_API_KEY="your-gemini-api-key"
+HUGGINGFACE_API_KEY="your-huggingface-key"
 
-- **💻 Code Generation** - Generate components, pages, and features instantly
-- **🎨 UI Development** - Create beautiful interfaces with AI assistance  
-- **🔧 Bug Fixing** - Identify and resolve issues with intelligent suggestions
-- **📝 Documentation** - Auto-generate comprehensive documentation
-- **🚀 Optimization** - Performance improvements and best practices
+# Application
+NEXTAUTH_SECRET="your-nextauth-secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-Ready to build something amazing? Start chatting with Z.ai at [chat.z.ai](https://chat.z.ai) and experience the future of AI-powered development!
+Open [http://localhost:3000](http://localhost:3000) to access NelsonGPT.
 
 ## 📁 Project Structure
 
 ```
 src/
-├── app/                 # Next.js App Router pages
-├── components/          # Reusable React components
-│   └── ui/             # shadcn/ui components
-├── hooks/              # Custom React hooks
-└── lib/                # Utility functions and configurations
+├── app/
+│   ├── api/                 # Medical API endpoints
+│   │   ├── rag/            # RAG pipeline endpoints
+│   │   ├── chat/           # Chat management
+│   │   └── health/         # System health checks
+│   ├── clinical/           # Clinical tools interface
+│   └── settings/           # Application settings
+├── components/
+│   ├── ui/                 # shadcn/ui components
+│   ├── ClinicalFeatures.tsx # Clinical tools component
+│   ├── MarkdownRenderer.tsx # Medical content renderer
+│   └── SettingsModal.tsx   # Settings management
+├── lib/
+│   ├── rag-pipeline.ts     # RAG implementation
+│   ├── mistral-service.ts  # Mistral AI integration
+│   ├── gemini-service.ts   # Gemini AI integration
+│   ├── embeddings.ts       # Vector embeddings
+│   ├── supabase.ts         # Database operations
+│   └── langgraph-workflow.ts # AI workflow management
+└── hooks/
+    ├── use-mobile-features.ts # Mobile PWA hooks
+    └── use-toast.ts          # Notification system
 ```
 
-## 🎨 Available Features & Components
+## 🔗 API Endpoints
 
-This scaffold includes a comprehensive set of modern web development tools:
+### Medical AI Endpoints
+- `POST /api/rag/chat` - Main chat interface with RAG
+- `POST /api/rag/clinical/diagnosis` - Differential diagnosis generation
+- `POST /api/rag/clinical/treatment` - Treatment recommendations
+- `POST /api/rag/education` - Medical education content
 
-### 🧩 UI Components (shadcn/ui)
-- **Layout**: Card, Separator, Aspect Ratio, Resizable Panels
-- **Forms**: Input, Textarea, Select, Checkbox, Radio Group, Switch
-- **Feedback**: Alert, Toast (Sonner), Progress, Skeleton
-- **Navigation**: Breadcrumb, Menubar, Navigation Menu, Pagination
-- **Overlay**: Dialog, Sheet, Popover, Tooltip, Hover Card
-- **Data Display**: Badge, Avatar, Calendar
+### System Endpoints
+- `GET /api/health` - System health and service status
+- `GET /api/chat/sessions` - Chat session management
+- `POST /api/chat/messages` - Message storage and retrieval
 
-### 📊 Advanced Data Features
-- **Tables**: Powerful data tables with sorting, filtering, pagination (TanStack Table)
-- **Charts**: Beautiful visualizations with Recharts
-- **Forms**: Type-safe forms with React Hook Form + Zod validation
+## 🛡️ Security & Compliance
 
-### 🎨 Interactive Features
-- **Animations**: Smooth micro-interactions with Framer Motion
-- **Drag & Drop**: Modern drag-and-drop functionality with DND Kit
-- **Theme Switching**: Built-in dark/light mode support
+### Medical Data Protection
+- All medical conversations are encrypted in transit and at rest
+- No PHI (Protected Health Information) is stored without explicit consent
+- Session data is automatically purged based on retention policies
+- API rate limiting to prevent abuse
 
-### 🔐 Backend Integration
-- **Authentication**: Ready-to-use auth flows with NextAuth.js
-- **Database**: Type-safe database operations with Prisma
-- **API Client**: HTTP requests with Axios + TanStack Query
-- **State Management**: Simple and scalable with Zustand
+### Important Disclaimers
+⚠️ **Medical Disclaimer**: NelsonGPT is designed as a clinical decision support tool for healthcare professionals. It should not replace professional medical judgment, clinical examination, or direct patient care. Always verify information with current medical literature and consult with senior clinicians when appropriate.
 
-### 🌍 Production Features
-- **Internationalization**: Multi-language support with Next Intl
-- **Image Optimization**: Automatic image processing with Sharp
-- **Type Safety**: End-to-end TypeScript with Zod validation
-- **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+⚠️ **Content Licensing**: This application references the Nelson Textbook of Pediatrics. Ensure proper licensing agreements are in place for commercial use.
 
-## 🤝 Get Started with Z.ai
+## 🧪 Testing
 
-1. **Clone this scaffold** to jumpstart your project
-2. **Visit [chat.z.ai](https://chat.z.ai)** to access your AI coding assistant
-3. **Start building** with intelligent code generation and assistance
-4. **Deploy with confidence** using the production-ready setup
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run medical AI pipeline tests
+npm run test:medical
+
+# Run API endpoint tests
+npm run test:api
+```
+
+## 🚀 Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed production deployment instructions including:
+- Environment configuration
+- Database setup and migrations
+- SSL certificate configuration
+- Health monitoring setup
+- Scaling considerations
+
+## 🤝 Contributing
+
+We welcome contributions from medical professionals and developers. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+### Medical Content Contributions
+- All medical content must be evidence-based
+- Cite appropriate peer-reviewed sources
+- Follow established medical writing guidelines
+- Include appropriate disclaimers
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### Third-Party Licenses
+- Nelson Textbook of Pediatrics content used under appropriate licensing
+- AI model usage subject to respective provider terms
+- shadcn/ui components under MIT License
+
+## 📞 Support
+
+For technical support, medical content questions, or deployment assistance:
+- Create an issue in this repository
+- Email: support@nelsongpt.medical
+- Documentation: [docs.nelsongpt.medical](https://docs.nelsongpt.medical)
 
 ---
 
-Built with ❤️ for the developer community. Supercharged by [Z.ai](https://chat.z.ai) 🚀
+**Built for pediatric healthcare professionals worldwide** 🌍  
+*Empowering clinical decision-making with AI* 🤖
