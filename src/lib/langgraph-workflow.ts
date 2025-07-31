@@ -1,37 +1,115 @@
-import { ragPipeline, RAGResult } from './rag-pipeline';
+// Enhanced LangGraph Workflow for NelsonGPT with Advanced Medical AI Integration
+import { enhancedRAGPipeline, EnhancedRAGResult, MedicalContext } from './rag-pipeline';
+import { vectorDatabaseService } from './vector-database';
 import { embeddingService } from './embeddings';
+import { mistralService } from './mistral-service';
+import { geminiService } from './gemini-service';
 import { supabaseServiceBackend } from './supabase';
+import { securityService } from './security';
 
-export interface WorkflowState {
+export interface EnhancedWorkflowState {
+  // Input
   query: string;
-  context?: string;
-  relevantDocuments?: any[];
-  ragResult?: RAGResult;
+  medicalContext?: Partial<MedicalContext>;
+  sessionId?: string;
+  userId?: string;
+  
+  // Processing state
   enhancedQuery?: string;
-  clinicalAssessment?: string;
+  medicalAnalysis?: {
+    queryType: string;
+    urgencyLevel: string;
+    specialties: string[];
+    ageGroup?: string;
+    clinicalSetting: string;
+    riskFactors: string[];
+  };
+  
+  // RAG results
+  ragResult?: EnhancedRAGResult;
+  relevantDocuments?: any[];
+  context?: string;
+  
+  // AI responses
+  primaryResponse?: {
+    content: string;
+    confidence: number;
+    reasoning: string;
+    usage: any;
+  };
+  enhancedResponse?: {
+    content: string;
+    improvements: string[];
+    usage: any;
+  };
+  
+  // Clinical analysis
+  clinicalAssessment?: {
+    diagnosis?: string[];
+    recommendations: string[];
+    warnings: string[];
+    followUp: string[];
+    evidenceLevel: string;
+  };
+  
+  // Quality and validation
+  qualityCheck?: {
+    passed: boolean;
+    score: number;
+    issues: string[];
+    recommendations: string[];
+  };
+  
+  medicalValidation?: {
+    safetyCheck: boolean;
+    appropriateness: boolean;
+    completeness: boolean;
+    accuracy: boolean;
+    warnings: string[];
+  };
+  
+  // Final output
   finalAnswer?: string;
   confidence?: number;
   sources?: string[];
-  processingTime?: number;
+  metadata?: any;
+  
+  // Error handling
   error?: string;
+  warnings?: string[];
+  
+  // Performance tracking
+  processingSteps?: Array<{
+    step: string;
+    duration: number;
+    success: boolean;
+    details?: any;
+  }>;
+  processingTime?: number;
 }
 
-export interface WorkflowNode {
+export interface EnhancedWorkflowNode {
   id: string;
   name: string;
-  execute: (state: WorkflowState) => Promise<Partial<WorkflowState>>;
+  description: string;
+  execute: (state: EnhancedWorkflowState) => Promise<Partial<EnhancedWorkflowState>>;
+  retryable?: boolean;
+  timeout?: number;
 }
 
-export interface WorkflowEdge {
+export interface EnhancedWorkflowEdge {
   from: string;
   to: string;
-  condition?: (state: WorkflowState) => boolean;
+  condition?: (state: EnhancedWorkflowState) => boolean;
+  weight?: number;
 }
 
-export class LangGraphWorkflow {
-  private nodes: Map<string, WorkflowNode> = new Map();
-  private edges: WorkflowEdge[] = [];
-  private startNodeId: string = 'query_analysis';
+export class EnhancedLangGraphWorkflow {
+  private nodes: Map<string, EnhancedWorkflowNode> = new Map();
+  private edges: EnhancedWorkflowEdge[] = [];
+  private startNodeId: string = 'security_validation';
+  private maxRetries: number = 2;
+  private defaultTimeout: number = 30000; // 30 seconds
 
   constructor() {
     this.initializeNodes();
@@ -39,56 +117,150 @@ export class LangGraphWorkflow {
   }
 
   private initializeNodes() {
-    // Node 1: Query Analysis
-    this.nodes.set('query_analysis', {
-      id: 'query_analysis',
-      name: 'Query Analysis',
-      execute: async (state: WorkflowState) => {
+    // Node 1: Security and Input Validation
+    this.nodes.set('security_validation', {
+      id: 'security_validation',
+      name: 'Security Validation',
+      description: 'Validate input for security threats and PHI',
+      execute: async (state: EnhancedWorkflowState) => {
         try {
           const startTime = Date.now();
           
-          // Analyze query for medical context and intent
-          const medicalKeywords = this.extractMedicalKeywords(state.query);
-          const queryType = this.classifyQueryType(state.query);
-          const urgency = this.assessUrgency(state.query);
-          
-          // Enhance query based on analysis
-          const enhancedQuery = this.enhanceQuery(state.query, {
-            keywords: medicalKeywords,
-            type: queryType,
-            urgency,
+          // Validate input for security issues
+          const validation = securityService.validateMedicalInput({
+            query: state.query,
+            medicalContext: state.medicalContext,
           });
-
+          
+          if (!validation.isValid) {
+            return {
+              error: `Security validation failed: ${validation.errors.join(', ')}`,
+            };
+          }
+          
+          // Log security validation
+          if (state.sessionId) {
+            await securityService.createAuditLog(
+              'query_security_validation',
+              'medical_query',
+              {
+                ipAddress: 'system',
+                userAgent: 'workflow',
+                timestamp: new Date(),
+                sessionId: state.sessionId,
+                userId: state.userId,
+              },
+              true,
+              { queryLength: state.query.length }
+            );
+          }
+          
           return {
-            enhancedQuery,
-            processingTime: Date.now() - startTime,
+            processingSteps: [{
+              step: 'security_validation',
+              duration: Date.now() - startTime,
+              success: true,
+              details: { validationPassed: true }
+            }]
           };
         } catch (error) {
           return {
-            error: `Query analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            error: `Security validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           };
         }
       },
+      retryable: false,
+      timeout: 5000,
     });
 
-    // Node 2: Document Retrieval
-    this.nodes.set('document_retrieval', {
-      id: 'document_retrieval',
-      name: 'Document Retrieval',
-      execute: async (state: WorkflowState) => {
+    // Node 2: Advanced Medical Query Analysis
+    this.nodes.set('medical_analysis', {
+      id: 'medical_analysis',
+      name: 'Medical Query Analysis',
+      description: 'Analyze query for medical context, urgency, and specialties',
+      execute: async (state: EnhancedWorkflowState) => {
         try {
           const startTime = Date.now();
           
-          // Use enhanced query for better retrieval
-          const queryToUse = state.enhancedQuery || state.query;
-          const ragResult = await ragPipeline.execute(queryToUse);
+          // Enhanced medical analysis using AI
+          const analysis = await this.performAdvancedMedicalAnalysis(state.query, state.medicalContext);
+          
+          // Extract enhanced query for better retrieval
+          const enhancedQuery = await this.enhanceQueryForRetrieval(state.query, analysis);
+          
+          return {
+            medicalAnalysis: analysis,
+            enhancedQuery,
+            processingSteps: [
+              ...(state.processingSteps || []),
+              {
+                step: 'medical_analysis',
+                duration: Date.now() - startTime,
+                success: true,
+                details: { 
+                  queryType: analysis.queryType,
+                  urgencyLevel: analysis.urgencyLevel,
+                  specialtiesCount: analysis.specialties.length
+                }
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            error: `Medical analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          };
+        }
+      },
+      retryable: true,
+      timeout: 15000,
+    });
 
+    // Node 3: Enhanced Document Retrieval
+    this.nodes.set('document_retrieval', {
+      id: 'document_retrieval',
+      name: 'Enhanced Document Retrieval',
+      description: 'Retrieve relevant medical documents using advanced RAG',
+      execute: async (state: EnhancedWorkflowState) => {
+        try {
+          const startTime = Date.now();
+          
+          // Build medical context from analysis
+          const medicalContext: Partial<MedicalContext> = {
+            ...state.medicalContext,
+            queryType: state.medicalAnalysis?.queryType as any,
+            urgencyLevel: state.medicalAnalysis?.urgencyLevel as any,
+            medicalSpecialties: state.medicalAnalysis?.specialties,
+            patientAge: state.medicalAnalysis?.ageGroup,
+            clinicalSetting: state.medicalAnalysis?.clinicalSetting as any,
+          };
+          
+          // Execute enhanced RAG pipeline
+          const ragResult = await enhancedRAGPipeline.execute(
+            state.enhancedQuery || state.query,
+            medicalContext,
+            {
+              bypassCache: false,
+              includeEnhancement: false, // We'll do enhancement separately
+            }
+          );
+          
           return {
             ragResult,
             relevantDocuments: ragResult.relevantDocuments,
-            context: ragResult.context,
-            sources: ragResult.sources,
-            processingTime: Date.now() - startTime,
+            context: ragResult.enrichedContext,
+            processingSteps: [
+              ...(state.processingSteps || []),
+              {
+                step: 'document_retrieval',
+                duration: Date.now() - startTime,
+                success: true,
+                details: {
+                  documentsRetrieved: ragResult.metadata.documentCount,
+                  averageSimilarity: ragResult.relevantDocuments.reduce((sum, doc) => sum + (doc.similarity || 0), 0) / ragResult.relevantDocuments.length,
+                  confidence: ragResult.confidence
+                }
+              }
+            ]
           };
         } catch (error) {
           return {
@@ -96,103 +268,267 @@ export class LangGraphWorkflow {
           };
         }
       },
+      retryable: true,
+      timeout: 25000,
     });
 
-    // Node 3: Clinical Assessment
-    this.nodes.set('clinical_assessment', {
-      id: 'clinical_assessment',
-      name: 'Clinical Assessment',
-      execute: async (state: WorkflowState) => {
+    // Node 4: Primary Medical Response Generation
+    this.nodes.set('primary_response', {
+      id: 'primary_response',
+      name: 'Primary Medical Response',
+      description: 'Generate primary medical response using Mistral AI',
+      execute: async (state: EnhancedWorkflowState) => {
         try {
           const startTime = Date.now();
           
-          // Perform clinical assessment based on retrieved documents
-          const assessment = await this.performClinicalAssessment(
-            state.query,
-            state.context || '',
-            state.relevantDocuments || []
-          );
-
-          return {
-            clinicalAssessment: assessment.assessment,
-            confidence: assessment.confidence,
-            processingTime: Date.now() - startTime,
-          };
-        } catch (error) {
-          return {
-            error: `Clinical assessment failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          };
-        }
-      },
-    });
-
-    // Node 4: Response Generation
-    this.nodes.set('response_generation', {
-      id: 'response_generation',
-      name: 'Response Generation',
-      execute: async (state: WorkflowState) => {
-        try {
-          const startTime = Date.now();
-          
-          // Generate final response using all available information
-          const finalAnswer = await this.generateFinalResponse({
-            query: state.query,
-            context: state.context || '',
-            clinicalAssessment: state.clinicalAssessment || '',
-            confidence: state.confidence || 0,
-            sources: state.sources || [],
-          });
-
-          return {
-            finalAnswer,
-            processingTime: Date.now() - startTime,
-          };
-        } catch (error) {
-          return {
-            error: `Response generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          };
-        }
-      },
-    });
-
-    // Node 5: Quality Check
-    this.nodes.set('quality_check', {
-      id: 'quality_check',
-      name: 'Quality Check',
-      execute: async (state: WorkflowState) => {
-        try {
-          const startTime = Date.now();
-          
-          // Perform quality checks on the generated response
-          const qualityResult = await this.performQualityCheck({
-            query: state.query,
-            answer: state.finalAnswer || '',
-            context: state.context || '',
-            confidence: state.confidence || 0,
-          });
-
-          if (!qualityResult.passed) {
-            // If quality check fails, we might want to retry or adjust
-            return {
-              error: `Quality check failed: ${qualityResult.reason}`,
-              confidence: Math.max(0, (state.confidence || 0) - 0.2),
-            };
+          if (!state.ragResult) {
+            throw new Error('No RAG result available for response generation');
           }
-
+          
+          // Generate clinical reasoning first
+          const reasoning = await this.generateClinicalReasoning(
+            state.query,
+            state.ragResult,
+            state.medicalAnalysis!
+          );
+          
+          // Generate primary response with reasoning context
+          const response = await mistralService.generateMedicalResponse({
+            query: state.query,
+            context: state.ragResult.enrichedContext,
+            clinicalAssessment: state.ragResult.clinicalAssessment,
+            sources: state.ragResult.sources.map(s => `${s.chapter}${s.section ? ` - ${s.section}` : ''}`),
+          });
+          
+          // Calculate confidence based on multiple factors
+          const confidence = this.calculateResponseConfidence(
+            state.ragResult,
+            response.response,
+            state.medicalAnalysis!
+          );
+          
           return {
-            confidence: qualityResult.confidence,
-            processingTime: Date.now() - startTime,
+            primaryResponse: {
+              content: response.response,
+              confidence,
+              reasoning,
+              usage: response.usage,
+            },
+            processingSteps: [
+              ...(state.processingSteps || []),
+              {
+                step: 'primary_response',
+                duration: Date.now() - startTime,
+                success: true,
+                details: {
+                  responseLength: response.response.length,
+                  confidence,
+                  tokensUsed: response.usage?.total_tokens || 0
+                }
+              }
+            ]
           };
         } catch (error) {
           return {
-            error: `Quality check failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            error: `Primary response generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           };
         }
       },
+      retryable: true,
+      timeout: 30000,
+    });
+
+    // Node 5: Enhanced Response with Gemini
+    this.nodes.set('enhanced_response', {
+      id: 'enhanced_response',
+      name: 'Enhanced Response',
+      description: 'Enhance response using Gemini AI for better cognitive processing',
+      execute: async (state: EnhancedWorkflowState) => {
+        try {
+          const startTime = Date.now();
+          
+          if (!state.primaryResponse) {
+            throw new Error('No primary response available for enhancement');
+          }
+          
+          // Determine enhancement strategy based on query characteristics
+          const enhancementType = this.determineEnhancementType(state.medicalAnalysis!);
+          const targetAudience = this.determineTargetAudience(state.medicalAnalysis!);
+          
+          // Enhance with Gemini
+          const enhancement = await geminiService.enhanceMedicalContent({
+            originalContent: state.primaryResponse.content,
+            enhancementType,
+            targetAudience,
+            additionalContext: `
+              Medical Context: ${JSON.stringify(state.medicalAnalysis, null, 2)}
+              Clinical Reasoning: ${state.primaryResponse.reasoning}
+              Confidence Level: ${state.primaryResponse.confidence}
+            `,
+          });
+          
+          // Analyze improvements made
+          const improvements = this.analyzeEnhancements(
+            state.primaryResponse.content,
+            enhancement.enhancedContent
+          );
+          
+          return {
+            enhancedResponse: {
+              content: enhancement.enhancedContent,
+              improvements,
+              usage: enhancement.usage,
+            },
+            processingSteps: [
+              ...(state.processingSteps || []),
+              {
+                step: 'enhanced_response',
+                duration: Date.now() - startTime,
+                success: true,
+                details: {
+                  enhancementType,
+                  targetAudience,
+                  improvementsCount: improvements.length,
+                  tokensUsed: enhancement.usage?.totalTokenCount || 0
+                }
+              }
+            ]
+          };
+        } catch (error) {
+          console.warn('Enhancement failed, proceeding with primary response:', error);
+          return {
+            warnings: [
+              ...(state.warnings || []),
+              `Enhancement failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+            ]
+          };
+        }
+      },
+      retryable: true,
+      timeout: 25000,
+    });
+
+    // Node 6: Clinical Assessment and Validation
+    this.nodes.set('clinical_validation', {
+      id: 'clinical_validation',
+      name: 'Clinical Validation',
+      description: 'Comprehensive medical validation and clinical assessment',
+      execute: async (state: EnhancedWorkflowState) => {
+        try {
+          const startTime = Date.now();
+          
+          const finalResponse = state.enhancedResponse?.content || state.primaryResponse?.content || '';
+          
+          // Perform comprehensive clinical assessment
+          const clinicalAssessment = await this.performComprehensiveClinicalAssessment(
+            state.query,
+            finalResponse,
+            state.ragResult!,
+            state.medicalAnalysis!
+          );
+          
+          // Perform medical safety validation
+          const medicalValidation = await this.performMedicalSafetyValidation(
+            finalResponse,
+            state.medicalAnalysis!,
+            clinicalAssessment
+          );
+          
+          return {
+            clinicalAssessment,
+            medicalValidation,
+            processingSteps: [
+              ...(state.processingSteps || []),
+              {
+                step: 'clinical_validation',
+                duration: Date.now() - startTime,
+                success: true,
+                details: {
+                  safetyPassed: medicalValidation.safetyCheck,
+                  appropriatenessPassed: medicalValidation.appropriateness,
+                  warningsCount: medicalValidation.warnings.length
+                }
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            error: `Clinical validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          };
+        }
+      },
+      retryable: false,
+      timeout: 20000,
+    });
+
+    // Node 7: Quality Assurance and Finalization
+    this.nodes.set('quality_finalization', {
+      id: 'quality_finalization',
+      name: 'Quality Finalization',
+      description: 'Final quality checks and response preparation',
+      execute: async (state: EnhancedWorkflowState) => {
+        try {
+          const startTime = Date.now();
+          
+          const finalResponse = state.enhancedResponse?.content || state.primaryResponse?.content || '';
+          
+          // Comprehensive quality check
+          const qualityCheck = await this.performComprehensiveQualityCheck(
+            state.query,
+            finalResponse,
+            state.ragResult!,
+            state.medicalValidation!,
+            state.clinicalAssessment!
+          );
+          
+          // Calculate final confidence score
+          const finalConfidence = this.calculateFinalConfidence(
+            state.primaryResponse?.confidence || 0,
+            qualityCheck.score,
+            state.medicalValidation!,
+            state.ragResult!.confidence
+          );
+          
+          // Prepare final answer with all enhancements
+          const finalAnswer = this.prepareFinalAnswer(
+            finalResponse,
+            state.clinicalAssessment!,
+            state.ragResult!.sources,
+            state.medicalValidation!.warnings
+          );
+          
+          // Extract sources
+          const sources = state.ragResult!.sources.map(s => `${s.chapter}${s.section ? ` - ${s.section}` : ''}`);
+          
+          return {
+            qualityCheck,
+            finalAnswer,
+            confidence: finalConfidence,
+            sources,
+            processingSteps: [
+              ...(state.processingSteps || []),
+              {
+                step: 'quality_finalization',
+                duration: Date.now() - startTime,
+                success: true,
+                details: {
+                  qualityScore: qualityCheck.score,
+                  finalConfidence,
+                  sourcesCount: sources.length
+                }
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            error: `Quality finalization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          };
+        }
+      },
+      retryable: false,
+      timeout: 15000,
     });
   }
-
-  private initializeEdges() {
     this.edges = [
       { from: 'query_analysis', to: 'document_retrieval' },
       { from: 'document_retrieval', to: 'clinical_assessment' },
