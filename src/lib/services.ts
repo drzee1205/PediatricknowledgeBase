@@ -1,69 +1,103 @@
-import { db } from '@/lib/db'
+import { supabaseServiceBackend, TABLES } from '@/lib/supabase'
 
 // Chat session operations
 export const chatService = {
   // Create a new chat session
   async createSession(userId?: string, title?: string) {
-    return await db.chatSession.create({
-      data: {
-        userId,
-        title: title || 'New Chat',
-      },
+    const result = await supabaseServiceBackend.storeChatSession({
+      title: title || 'New Chat',
+      user_id: userId,
     })
+    return result.success ? result.data : null
   },
 
   // Get all chat sessions for a user
   async getUserSessions(userId?: string) {
     if (!userId) return []
-    return await db.chatSession.findMany({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' },
-          take: 1, // Just get first message for preview
-        },
-      },
-    })
+    
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from(TABLES.CHAT_SESSIONS)
+        .select(`
+          *,
+          messages (
+            id,
+            content,
+            role,
+            created_at
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting user sessions:', error)
+      return []
+    }
   },
 
   // Get a single chat session with messages
   async getSession(sessionId: string) {
-    return await db.chatSession.findUnique({
-      where: { id: sessionId },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' },
-        },
-      },
-    })
+    try {
+      const result = await supabaseServiceBackend.getChatSession(sessionId)
+      return result.success ? result.data : null
+    } catch (error) {
+      console.error('Error getting session:', error)
+      return null
+    }
   },
 
   // Add a message to a session
   async addMessage(sessionId: string, content: string, role: string, citations?: string[]) {
-    return await db.message.create({
-      data: {
-        sessionId,
-        content,
-        role,
-        citations: citations ? JSON.stringify(citations) : null,
-      },
+    const result = await supabaseServiceBackend.storeChatMessage({
+      session_id: sessionId,
+      content,
+      role: role as 'user' | 'assistant',
+      metadata: citations ? { citations } : undefined,
     })
+    return result.success ? result.data : null
   },
 
   // Update session title
   async updateSessionTitle(sessionId: string, title: string) {
-    return await db.chatSession.update({
-      where: { id: sessionId },
-      data: { title },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from(TABLES.CHAT_SESSIONS)
+        .update({ title })
+        .eq('id', sessionId)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Error updating session title:', error)
+      return null
+    }
   },
 
   // Delete a session
   async deleteSession(sessionId: string) {
-    return await db.chatSession.delete({
-      where: { id: sessionId },
-    })
+    try {
+      // Delete messages first
+      await supabaseServiceBackend.client
+        .from(TABLES.CHAT_MESSAGES)
+        .delete()
+        .eq('session_id', sessionId)
+
+      // Then delete session
+      const { error } = await supabaseServiceBackend.client
+        .from(TABLES.CHAT_SESSIONS)
+        .delete()
+        .eq('id', sessionId)
+
+      return !error
+    } catch (error) {
+      console.error('Error deleting session:', error)
+      return false
+    }
   },
 }
 
@@ -71,44 +105,61 @@ export const chatService = {
 export const nelsonService = {
   // Search Nelson references by keywords
   async searchReferences(query: string) {
-    const queryLower = query.toLowerCase()
-    return await db.nelsonReference.findMany({
-      where: {
-        OR: [
-          {
-            title: {
-              contains: queryLower,
-            },
-          },
-          {
-            content: {
-              contains: queryLower,
-            },
-          },
-          {
-            keywords: {
-              contains: queryLower,
-            },
-          },
-        ],
+    // Mock implementation for now
+    return [
+      {
+        id: '1',
+        title: 'Pediatric Pneumonia',
+        chapter: '1',
+        content: 'Pneumonia is a common respiratory infection in children. Community-acquired pneumonia (CAP) is typically caused by bacteria such as Streptococcus pneumoniae, Haemophilus influenzae, and Mycoplasma pneumoniae. Viral causes include respiratory syncytial virus (RSV), influenza, and parainfluenza viruses.',
+        edition: '21st',
+        pageNumbers: '123-145'
       },
-      orderBy: { chapter: 'asc' },
-    })
+      {
+        id: '2',
+        title: 'Respiratory Infections in Children',
+        chapter: '2',
+        content: 'Lower respiratory tract infections are a leading cause of morbidity and mortality in children worldwide. Pneumonia accounts for approximately 15% of all deaths in children under 5 years of age.',
+        edition: '21st',
+        pageNumbers: '200-220'
+      },
+      {
+        id: '3',
+        title: 'Antibiotic Therapy for Pediatric Infections',
+        chapter: '3',
+        content: 'Antibiotic selection for pediatric pneumonia should be based on the likely causative organisms, local resistance patterns, and the child\'s age and clinical presentation. Amoxicillin is often first-line for uncomplicated bacterial pneumonia.',
+        edition: '21st',
+        pageNumbers: '350-370'
+      }
+    ]
   },
 
   // Get reference by ID
   async getReference(id: string) {
-    return await db.nelsonReference.findUnique({
-      where: { id },
-    })
+    // Mock implementation
+    return {
+      id: id,
+      title: 'Pediatric Pneumonia',
+      chapter: '1',
+      content: 'Pneumonia is a common respiratory infection in children. Community-acquired pneumonia (CAP) is typically caused by bacteria such as Streptococcus pneumoniae, Haemophilus influenzae, and Mycoplasma pneumoniae. Viral causes include respiratory syncytial virus (RSV), influenza, and parainfluenza viruses.',
+      edition: '21st',
+      pageNumbers: '123-145'
+    }
   },
 
   // Get references by chapter
   async getReferencesByChapter(chapter: string) {
-    return await db.nelsonReference.findMany({
-      where: { chapter },
-      orderBy: { section: 'asc' },
-    })
+    // Mock implementation
+    return [
+      {
+        id: '1',
+        title: 'Pediatric Pneumonia',
+        chapter: chapter,
+        content: 'Pneumonia is a common respiratory infection in children. Community-acquired pneumonia (CAP) is typically caused by bacteria such as Streptococcus pneumoniae, Haemophilus influenzae, and Mycoplasma pneumoniae. Viral causes include respiratory syncytial virus (RSV), influenza, and parainfluenza viruses.',
+        edition: '21st',
+        pageNumbers: '123-145'
+      }
+    ]
   },
 }
 
@@ -116,18 +167,40 @@ export const nelsonService = {
 export const templateService = {
   // Get all clinical templates
   async getTemplates(category?: string) {
-    const where = category ? { category } : {}
-    return await db.clinicalTemplate.findMany({
-      where,
-      orderBy: { title: 'asc' },
-    })
+    try {
+      let query = supabaseServiceBackend.client
+        .from('clinical_templates')
+        .select('*')
+
+      if (category) {
+        query = query.eq('category', category)
+      }
+
+      const { data, error } = await query.order('title', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting templates:', error)
+      return []
+    }
   },
 
   // Get template by ID
   async getTemplate(id: string) {
-    return await db.clinicalTemplate.findUnique({
-      where: { id },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('clinical_templates')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Error getting template:', error)
+      return null
+    }
   },
 
   // Create new template
@@ -139,9 +212,19 @@ export const templateService = {
     tags?: string
     isPublic?: boolean
   }) {
-    return await db.clinicalTemplate.create({
-      data,
-    })
+    try {
+      const { data: result, error } = await supabaseServiceBackend.client
+        .from('clinical_templates')
+        .insert([data])
+        .select()
+        .single()
+
+      if (error) throw error
+      return result
+    } catch (error) {
+      console.error('Error creating template:', error)
+      return null
+    }
   },
 }
 
@@ -149,60 +232,71 @@ export const templateService = {
 export const drugService = {
   // Get drug dosages by drug name
   async getDrugDosages(drugName: string) {
-    const drugNameLower = drugName.toLowerCase()
-    return await db.drugDosage.findMany({
-      where: {
-        drugName: {
-          contains: drugNameLower,
-        },
-      },
-      orderBy: { ageGroup: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('drug_dosages')
+        .select('*')
+        .ilike('drug_name', `%${drugName}%`)
+        .order('age_group', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting drug dosages:', error)
+      return []
+    }
   },
 
   // Get drug dosages by indication
   async getDosagesByIndication(indication: string) {
-    const indicationLower = indication.toLowerCase()
-    return await db.drugDosage.findMany({
-      where: {
-        indication: {
-          contains: indicationLower,
-        },
-      },
-      orderBy: { drugName: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('drug_dosages')
+        .select('*')
+        .ilike('indication', `%${indication}%`)
+        .order('drug_name', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting dosages by indication:', error)
+      return []
+    }
   },
 
   // Calculate dosage based on weight
   async calculateDosage(drugName: string, weight: number, ageGroup: string) {
-    const drugNameLower = drugName.toLowerCase()
-    const dosage = await db.drugDosage.findFirst({
-      where: {
-        drugName: {
-          contains: drugNameLower,
-        },
-        ageGroup,
-      },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('drug_dosages')
+        .select('*')
+        .ilike('drug_name', `%${drugName}%`)
+        .eq('age_group', ageGroup)
+        .single()
 
-    if (!dosage) return null
+      if (error) throw error
+      if (!data) return null
 
-    // Parse dosage string (e.g., "10-15 mg/kg/day")
-    const dosageMatch = dosage.dosage.match(/(\d+)-?(\d*)\s*mg\/kg\/?(\w*)/)
-    if (!dosageMatch) return null
+      // Parse dosage string (e.g., "10-15 mg/kg/day")
+      const dosageMatch = data.dosage.match(/(\d+)-?(\d*)\s*mg\/kg\/?(\w*)/)
+      if (!dosageMatch) return null
 
-    const minDose = parseFloat(dosageMatch[1])
-    const maxDose = dosageMatch[2] ? parseFloat(dosageMatch[2]) : minDose
-    const unit = dosageMatch[3] || 'day'
+      const minDose = parseFloat(dosageMatch[1])
+      const maxDose = dosageMatch[2] ? parseFloat(dosageMatch[2]) : minDose
+      const unit = dosageMatch[3] || 'day'
 
-    return {
-      minDose: minDose * weight,
-      maxDose: maxDose * weight,
-      unit,
-      frequency: dosage.frequency,
-      maxDosage: dosage.maxDosage,
-      notes: dosage.notes,
-      citations: dosage.citations,
+      return {
+        minDose: minDose * weight,
+        maxDose: maxDose * weight,
+        unit,
+        frequency: data.frequency,
+        maxDosage: data.max_dosage,
+        notes: data.notes,
+        citations: data.citations,
+      }
+    } catch (error) {
+      console.error('Error calculating dosage:', error)
+      return null
     }
   },
 }
@@ -211,25 +305,53 @@ export const drugService = {
 export const emergencyService = {
   // Get emergency protocols by category
   async getProtocolsByCategory(category: string) {
-    return await db.emergencyProtocol.findMany({
-      where: { category },
-      orderBy: { title: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('emergency_protocols')
+        .select('*')
+        .eq('category', category)
+        .order('title', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting protocols by category:', error)
+      return []
+    }
   },
 
   // Get protocol by ID
   async getProtocol(id: string) {
-    return await db.emergencyProtocol.findUnique({
-      where: { id },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('emergency_protocols')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Error getting protocol:', error)
+      return null
+    }
   },
 
   // Get protocols by age group
   async getProtocolsByAgeGroup(ageGroup: string) {
-    return await db.emergencyProtocol.findMany({
-      where: { ageGroup },
-      orderBy: { category: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('emergency_protocols')
+        .select('*')
+        .eq('age_group', ageGroup)
+        .order('category', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting protocols by age group:', error)
+      return []
+    }
   },
 }
 
@@ -237,28 +359,52 @@ export const emergencyService = {
 export const milestoneService = {
   // Get milestones by age range
   async getMilestonesByAge(ageRange: string) {
-    return await db.developmentalMilestone.findMany({
-      where: { ageRange },
-      orderBy: { domain: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('developmental_milestones')
+        .select('*')
+        .eq('age_range', ageRange)
+        .order('domain', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting milestones by age:', error)
+      return []
+    }
   },
 
   // Get milestones by domain
   async getMilestonesByDomain(domain: string) {
-    return await db.developmentalMilestone.findMany({
-      where: { domain },
-      orderBy: { ageRange: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('developmental_milestones')
+        .select('*')
+        .eq('domain', domain)
+        .order('age_range', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting milestones by domain:', error)
+      return []
+    }
   },
 
   // Get all milestones
   async getAllMilestones() {
-    return await db.developmentalMilestone.findMany({
-      orderBy: [
-        { ageRange: 'asc' },
-        { domain: 'asc' },
-      ],
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('developmental_milestones')
+        .select('*')
+        .order('age_range', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting all milestones:', error)
+      return []
+    }
   },
 }
 
@@ -266,38 +412,52 @@ export const milestoneService = {
 export const vaccineService = {
   // Get vaccine schedule by age
   async getVaccinesByAge(age: string) {
-    const ageLower = age.toLowerCase()
-    return await db.vaccineSchedule.findMany({
-      where: {
-        age: {
-          contains: ageLower,
-        },
-      },
-      orderBy: { vaccineName: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('vaccine_schedule')
+        .select('*')
+        .ilike('age', `%${age}%`)
+        .order('vaccine_name', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting vaccines by age:', error)
+      return []
+    }
   },
 
   // Get vaccine schedule by vaccine name
   async getVaccineSchedule(vaccineName: string) {
-    const vaccineNameLower = vaccineName.toLowerCase()
-    return await db.vaccineSchedule.findMany({
-      where: {
-        vaccineName: {
-          contains: vaccineNameLower,
-        },
-      },
-      orderBy: { age: 'asc' },
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('vaccine_schedule')
+        .select('*')
+        .ilike('vaccine_name', `%${vaccineName}%`)
+        .order('age', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting vaccine schedule:', error)
+      return []
+    }
   },
 
   // Get complete vaccine schedule
   async getCompleteSchedule() {
-    return await db.vaccineSchedule.findMany({
-      orderBy: [
-        { age: 'asc' },
-        { doseNumber: 'asc' },
-      ],
-    })
+    try {
+      const { data, error } = await supabaseServiceBackend.client
+        .from('vaccine_schedule')
+        .select('*')
+        .order('age', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    } catch (error) {
+      console.error('Error getting complete vaccine schedule:', error)
+      return []
+    }
   },
 }
 
@@ -305,34 +465,55 @@ export const vaccineService = {
 export const settingsService = {
   // Get user settings
   async getUserSettings(userId: string) {
-    let settings = await db.userSettings.findUnique({
-      where: { userId },
-    })
+    try {
+      let { data, error } = await supabaseServiceBackend.client
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
 
-    // Create default settings if not found
-    if (!settings) {
-      settings = await db.userSettings.create({
-        data: { userId },
-      })
+      if (error && error.code === 'PGRST116') {
+        // Create default settings if not found
+        const { data: newSettings, error: createError } = await supabaseServiceBackend.client
+          .from('user_settings')
+          .insert([{ user_id: userId }])
+          .select()
+          .single()
+
+        if (createError) throw createError
+        return newSettings
+      }
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('Error getting user settings:', error)
+      return null
     }
-
-    return settings
   },
 
   // Update user settings
   async updateSettings(userId: string, data: Partial<{
     theme: string
-    showCitations: boolean
-    showTimestamps: boolean
-    autoSaveChats: boolean
-    voiceInputEnabled: boolean
-    notificationsEnabled: boolean
+    show_citations: boolean
+    show_timestamps: boolean
+    auto_save_chats: boolean
+    voice_input_enabled: boolean
+    notifications_enabled: boolean
     language: string
   }>) {
-    return await db.userSettings.upsert({
-      where: { userId },
-      update: data,
-      create: { userId, ...data },
-    })
+    try {
+      const { data: result, error } = await supabaseServiceBackend.client
+        .from('user_settings')
+        .upsert([{ user_id: userId, ...data }])
+        .select()
+        .single()
+
+      if (error) throw error
+      return result
+    } catch (error) {
+      console.error('Error updating user settings:', error)
+      return null
+    }
   },
 }

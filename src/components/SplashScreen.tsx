@@ -28,7 +28,7 @@ export default function SplashScreen() {
 
   if (!isVisible || !isMounted) return null
 
-  if (typeof document === 'undefined') return null
+  if (typeof document === 'undefined' || !document.body) return null
 
   return createPortal(
     <div className={`fixed inset-0 z-50 flex items-center justify-center bg-[#121212] transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>

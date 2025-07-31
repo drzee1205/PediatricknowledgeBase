@@ -61,6 +61,17 @@ export default function NelsonGPT() {
   
   const { settings } = useTheme()
   
+  // Default settings to prevent undefined errors
+  const safeSettings = settings || {
+    showCitations: true,
+    showTimestamps: true,
+    autoSaveChats: true,
+    voiceInputEnabled: false,
+    notificationsEnabled: true,
+    language: 'en',
+    theme: 'dark'
+  }
+  
   // Initialize with a session if none exists
   useEffect(() => {
     if (!currentSessionId && chatSessions.length === 0) {
@@ -336,7 +347,7 @@ export default function NelsonGPT() {
                         <MarkdownRenderer content={message.content} />
                       </div>
                       
-                      {message.citations && settings.showCitations && message.citations.length > 0 && (
+                      {message.citations && safeSettings.showCitations && message.citations.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-border">
                           <div className="text-xs text-muted-foreground">
                             <strong>Sources:</strong> {message.citations.join(', ')}
@@ -344,7 +355,7 @@ export default function NelsonGPT() {
                         </div>
                       )}
                       
-                      {settings.showTimestamps && (
+                      {settings?.showTimestamps && (
                         <div className="text-xs text-muted-foreground mt-2">
                           {formatTime(message.timestamp)}
                         </div>
