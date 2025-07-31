@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NelsonGPT - Your Pediatric Medical Assistant",
   description: "AI-powered pediatric medical assistant powered by Nelson Textbook of Pediatrics. Evidence-based clinical support for healthcare professionals.",
-  keywords: ["NelsonGPT", "Pediatrics", "Medical AI", "Clinical Assistant", "Nelson Textbook", "Healthcare"],
+  keywords: ["NelsonGPT", "Pediatrics", "Medical AI", "Clinical Assistant", "Nelson Textbook", "Healthcare", "PWA", "Mobile App"],
   authors: [{ name: "NelsonGPT Team" }],
   openGraph: {
     title: "NelsonGPT - Pediatric Medical Assistant",
@@ -39,6 +39,8 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false,
+    email: false,
+    address: false,
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -47,7 +49,30 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-title": "NelsonGPT",
     "msapplication-TileColor": "#121212",
     "msapplication-config": "/browserconfig.xml",
+    "msapplication-navbutton-color": "#121212",
+    "msapplication-starturl": "/",
+    "application-name": "NelsonGPT",
+    "theme-color": "#121212",
   },
+  icons: {
+    icon: [
+      { url: '/icon-72x72.png', sizes: '72x72', type: 'image/png' },
+      { url: '/icon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/icon-128x128.png', sizes: '128x128', type: 'image/png' },
+      { url: '/icon-144x144.png', sizes: '144x144', type: 'image/png' },
+      { url: '/icon-152x152.png', sizes: '152x152', type: 'image/png' },
+      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-384x384.png', sizes: '384x384', type: 'image/png' },
+      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/icon-192x192.png',
+  },
+  category: "medical",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({

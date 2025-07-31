@@ -174,3 +174,776 @@
   background: #0d1117;
   color: #f2f2f2;
 }
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Prevent zoom on input focus */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+  
+  /* Better touch targets */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow text selection in input areas */
+  input,
+  textarea,
+  [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+  
+  /* Prevent bounce effect */
+  body {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better button styling for touch */
+  button,
+  .button,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Enhanced touch feedback */
+  button:active,
+  .button:active,
+  [role="button"]:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  /* Custom scrollbar for mobile */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 2px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+  
+  /* Optimize for mobile viewport */
+  @viewport {
+    width: device-width;
+    initial-scale: 1;
+    maximum-scale: 1;
+    user-scalable: no;
+  }
+  
+  /* Better focus styles for mobile */
+  button:focus,
+  input:focus,
+  textarea:focus,
+  select:focus,
+  [tabindex]:focus {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
+  }
+  
+  /* Prevent text selection on mobile (except inputs) */
+  body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Optimize images for mobile */
+  img {
+    max-width: 100%;
+    height: auto;
+    pointer-events: none;
+  }
+  
+  /* Better form controls */
+  input,
+  textarea,
+  select {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 8px;
+  }
+  
+  /* Remove default callout on iOS */
+  a {
+    -webkit-touch-callout: none;
+  }
+  
+  /* Better touch targets for small screens */
+  .btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+  
+  .btn-xs {
+    min-height: 32px;
+    min-width: 32px;
+  }
+  
+  /* Mobile-optimized cards */
+  .card {
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Mobile-optimized typography */
+  h1 {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+  
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+  
+  p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  
+  /* Better table scrolling */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  
+  /* Mobile-optimized modals */
+  .modal {
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Better dropdown menus */
+  .dropdown-menu {
+    max-height: 50vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Mobile-optimized tabs */
+  .tabs {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  
+  .tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    min-height: 44px;
+  }
+  
+  /* Better navigation */
+  .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+  }
+  
+  /* Mobile-optimized forms */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  /* Better checkboxes and radio buttons */
+  .form-check {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+  
+  .form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.5rem;
+  }
+  
+  /* Mobile-optimized alerts */
+  .alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  
+  /* Better badges */
+  .badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+  
+  /* Mobile-optimized progress bars */
+  .progress {
+    height: 8px;
+    border-radius: 4px;
+    background: hsl(var(--muted));
+  }
+  
+  .progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  
+  /* Better tooltips */
+  .tooltip {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    max-width: 200px;
+  }
+  
+  /* Mobile-optimized popovers */
+  .popover {
+    max-width: 280px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Better loading states */
+  .spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid hsl(var(--muted));
+    border-top-color: hsl(var(--primary));
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Mobile-optimized avatars */
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .avatar-sm {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .avatar-lg {
+    width: 48px;
+    height: 48px;
+  }
+  
+  /* Better icons */
+  .icon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+  }
+  
+  .icon-sm {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .icon-lg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  /* Mobile-optimized dividers */
+  .divider {
+    height: 1px;
+    background: hsl(var(--border));
+    margin: 1rem 0;
+  }
+  
+  /* Better spacing utilities */
+  .space-y-1 > * + * {
+    margin-top: 0.25rem;
+  }
+  
+  .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .space-y-3 > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  .space-y-4 > * + * {
+    margin-top: 1rem;
+  }
+  
+  /* Mobile-optimized flexbox */
+  .flex {
+    display: flex;
+  }
+  
+  .flex-col {
+    flex-direction: column;
+  }
+  
+  .items-center {
+    align-items: center;
+  }
+  
+  .justify-between {
+    justify-content: space-between;
+  }
+  
+  .gap-1 {
+    gap: 0.25rem;
+  }
+  
+  .gap-2 {
+    gap: 0.5rem;
+  }
+  
+  .gap-3 {
+    gap: 0.75rem;
+  }
+  
+  .gap-4 {
+    gap: 1rem;
+  }
+  
+  /* Better responsive grid */
+  .grid {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  
+  /* Mobile-optimized padding */
+  .p-1 {
+    padding: 0.25rem;
+  }
+  
+  .p-2 {
+    padding: 0.5rem;
+  }
+  
+  .p-3 {
+    padding: 0.75rem;
+  }
+  
+  .p-4 {
+    padding: 1rem;
+  }
+  
+  .px-1 {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  
+  .px-2 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .px-3 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .py-1 {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+  
+  .py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+  
+  .py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  /* Better responsive margins */
+  .m-1 {
+    margin: 0.25rem;
+  }
+  
+  .m-2 {
+    margin: 0.5rem;
+  }
+  
+  .m-3 {
+    margin: 0.75rem;
+  }
+  
+  .m-4 {
+    margin: 1rem;
+  }
+  
+  .mx-1 {
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+  }
+  
+  .mx-2 {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+  }
+  
+  .mx-3 {
+    margin-left: 0.75rem;
+    margin-right: 0.75rem;
+  }
+  
+  .mx-4 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+  
+  .my-1 {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .my-2 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .my-3 {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .my-4 {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Better responsive text */
+  .text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  
+  .text-base {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  
+  .text-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  
+  .text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  /* Better responsive width */
+  .w-full {
+    width: 100%;
+  }
+  
+  .w-auto {
+    width: auto;
+  }
+  
+  .w-1/2 {
+    width: 50%;
+  }
+  
+  .w-1/3 {
+    width: 33.333333%;
+  }
+  
+  .w-2/3 {
+    width: 66.666667%;
+  }
+  
+  .w-1/4 {
+    width: 25%;
+  }
+  
+  .w-3/4 {
+    width: 75%;
+  }
+  
+  /* Better responsive height */
+  .h-full {
+    height: 100%;
+  }
+  
+  .h-auto {
+    height: auto;
+  }
+  
+  .h-screen {
+    height: 100vh;
+    height: 100dvh;
+  }
+  
+  .h-1/2 {
+    height: 50%;
+  }
+  
+  .h-1/3 {
+    height: 33.333333%;
+  }
+  
+  .h-2/3 {
+    height: 66.666667%;
+  }
+  
+  /* Better responsive overflow */
+  .overflow-hidden {
+    overflow: hidden;
+  }
+  
+  .overflow-auto {
+    overflow: auto;
+  }
+  
+  .overflow-x-auto {
+    overflow-x: auto;
+  }
+  
+  .overflow-y-auto {
+    overflow-y: auto;
+  }
+  
+  .overflow-scroll {
+    overflow: scroll;
+  }
+  
+  /* Better responsive positioning */
+  .relative {
+    position: relative;
+  }
+  
+  .absolute {
+    position: absolute;
+  }
+  
+  .fixed {
+    position: fixed;
+  }
+  
+  .sticky {
+    position: sticky;
+  }
+  
+  /* Better responsive z-index */
+  .z-0 {
+    z-index: 0;
+  }
+  
+  .z-10 {
+    z-index: 10;
+  }
+  
+  .z-20 {
+    z-index: 20;
+  }
+  
+  .z-30 {
+    z-index: 30;
+  }
+  
+  .z-40 {
+    z-index: 40;
+  }
+  
+  .z-50 {
+    z-index: 50;
+  }
+}
+
+/* Focus styles for better accessibility */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: 222.2 84% 4.9%;
+    --input: 222.2 84% 4.9%;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  /* Remove hover effects on touch devices */
+  button:hover,
+  .button:hover {
+    transform: none;
+  }
+  
+  /* Better touch feedback */
+  button:active,
+  .button:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Landscape mode optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  /* Adjust layout for landscape */
+  .h-screen {
+    height: 100vh;
+    height: 100dvh;
+  }
+  
+  /* Better use of horizontal space */
+  .max-w-4xl {
+    max-width: 100%;
+  }
+}
+
+/* Safe area insets for modern mobile devices */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .safe-area-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}

@@ -1,9 +1,8 @@
 'use client'
 
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { Components } from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { ReactMarkdownProps } from 'react-markdown/lib/react-markdown'
 
 interface MarkdownRendererProps {
   content: string
@@ -15,7 +14,7 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
     <div className={`prose prose-invert max-w-none ${className}`}>
       <ReactMarkdown
         components={{
-          code({ node, inline, className, children, ...props }: ReactMarkdownProps) {
+          code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '')
             const language = match ? match[1] : ''
             

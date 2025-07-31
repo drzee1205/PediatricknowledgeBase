@@ -1,10 +1,34 @@
-const CACHE_NAME = 'nelsongpt-v1';
+const CACHE_NAME = 'nelsongpt-v3';
 const urlsToCache = [
   '/',
   '/manifest.json',
   '/favicon.ico',
+  '/icon-72x72.png',
+  '/icon-96x96.png',
+  '/icon-128x128.png',
+  '/icon-144x144.png',
+  '/icon-152x152.png',
   '/icon-192x192.png',
-  '/icon-512x512.png'
+  '/icon-384x384.png',
+  '/icon-512x512.png',
+  '/splash-screen.png',
+  '/clinical',
+  // Add core app assets
+  '/_next/static/css/app/layout.css',
+  '/_next/static/chunks/webpack.js',
+  '/_next/static/chunks/main-app.js',
+  '/_next/static/chunks/app/page.js',
+  '/_next/static/chunks/app/layout.js'
+];
+
+// API routes that should not be cached
+const API_ROUTES = [
+  '/api/rag/chat',
+  '/api/rag/clinical/diagnosis',
+  '/api/rag/clinical/treatment',
+  '/api/rag/education',
+  '/api/chat/messages',
+  '/api/chat/sessions'
 ];
 
 // Install a service worker
@@ -15,11 +39,24 @@ self.addEventListener('install', event => {
         console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting())
   );
 });
 
 // Cache and return requests
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  
+  // Don't cache API requests
+  if (API_ROUTES.some(route => url.pathname.startsWith(route))) {
+    return;
+  }
+
+  // For non-GET requests, fetch directly
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -27,21 +64,38 @@ self.addEventListener('fetch', event => {
         if (response) {
           return response;
         }
-        return fetch(event.request).then(
+        
+        // Clone the request
+        const fetchRequest = event.request.clone();
+        
+        return fetch(fetchRequest).then(
           response => {
             // Check if we received a valid response
             if(!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
+            
             // Clone the response
-            var responseToCache = response.clone();
+            const responseToCache = response.clone();
+            
             caches.open(CACHE_NAME)
               .then(cache => {
                 cache.put(event.request, responseToCache);
               });
+            
             return response;
           }
-        );
+        ).catch(() => {
+          // If fetch fails, return offline page for HTML requests
+          if (event.request.headers.get('accept').includes('text/html')) {
+            return caches.match('/');
+          }
+          
+          // For other failed requests, return a basic offline response
+          if (event.request.url.includes('_next/static')) {
+            return new Response('Offline', { status: 503 });
+          }
+        });
       })
   );
 });
@@ -59,6 +113,7 @@ self.addEventListener('activate', event => {
         })
       );
     })
+    .then(() => self.clients.claim())
   );
 });
 
@@ -83,7 +138,21 @@ self.addEventListener('push', event => {
       vibrate: [100, 50, 100],
       data: {
         url: data.url || '/'
-      }
+      },
+      actions: [
+        {
+          action: 'open',
+          title: 'Open App',
+          icon: '/icon-96x96.png'
+        },
+        {
+          action: 'dismiss',
+          title: 'Dismiss',
+          icon: '/icon-96x96.png'
+        }
+      ],
+      requireInteraction: false,
+      silent: false
     };
     event.waitUntil(
       self.registration.showNotification(data.title, options)
@@ -94,7 +163,39 @@ self.addEventListener('push', event => {
 // Handle notification clicks
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  if (event.notification.data) {
-    clients.openWindow(event.notification.data.url);
+  
+  if (event.action === 'open') {
+    event.waitUntil(
+      clients.openWindow(event.notification.data.url)
+    );
   }
+});
+
+// Handle messages from clients
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  // Handle cache clearing
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            return caches.delete(cacheName);
+          })
+        );
+      })
+    );
+  }
+});
+
+// Handle offline functionality
+self.addEventListener('offline', () => {
+  console.log('App is offline');
+});
+
+self.addEventListener('online', () => {
+  console.log('App is online');
 });

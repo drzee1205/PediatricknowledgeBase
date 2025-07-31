@@ -11,21 +11,21 @@ export default function ClinicalPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-3 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="md:hidden flex items-center justify-between p-2 sm:p-3 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+        <Button variant="ghost" size="icon" className="h-8 w-8 touch-manipulation" asChild>
           <a href="/">
             <ArrowLeft className="h-4 w-4" />
           </a>
         </Button>
-        <h1 className="text-lg font-semibold">Clinical Tools</h1>
-        <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <h1 className="text-base sm:text-lg font-semibold">Clinical Tools</h1>
+        <Button variant="ghost" size="icon" className="h-8 w-8 touch-manipulation" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           <Menu className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Desktop Header */}
       <div className="hidden md:flex items-center gap-3 p-6 border-b">
-        <Button variant="ghost" size="icon" asChild>
+        <Button variant="ghost" size="icon" className="touch-manipulation" asChild>
           <a href="/">
             <ArrowLeft className="h-5 w-5" />
           </a>
@@ -37,7 +37,7 @@ export default function ClinicalPage() {
       </div>
 
       {/* Main Content */}
-      <div className="p-3 md:p-6">
+      <div className="p-2 sm:p-3 md:p-6">
         <ClinicalFeatures />
       </div>
     </div>

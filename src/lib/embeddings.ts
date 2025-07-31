@@ -44,8 +44,23 @@ export class EmbeddingService {
       const endTime = Date.now();
       const processingTime = endTime - startTime;
 
+      // Handle different result types from HuggingFace API
+      let embedding: number[];
+      if (Array.isArray(result)) {
+        if (Array.isArray(result[0])) {
+          // If it's a 2D array, flatten it
+          embedding = result.flat();
+        } else {
+          // If it's already a 1D array
+          embedding = result;
+        }
+      } else {
+        // Fallback to empty array
+        embedding = [];
+      }
+
       return {
-        embedding: Array.isArray(result) ? result : [],
+        embedding,
         tokenCount: this.estimateTokenCount(truncatedText),
         processingTime,
       };

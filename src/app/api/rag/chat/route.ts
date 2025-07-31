@@ -3,6 +3,7 @@ import { langGraphWorkflow } from '@/lib/langgraph-workflow';
 import { mistralService } from '@/lib/mistral-service';
 import { geminiService } from '@/lib/gemini-service';
 import { supabaseServiceBackend } from '@/lib/supabase';
+import { embeddingService } from '@/lib/embeddings';
 
 export async function POST(request: NextRequest) {
   try {
