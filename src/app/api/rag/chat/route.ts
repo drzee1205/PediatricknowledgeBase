@@ -4,7 +4,7 @@ import { mistralService } from '@/lib/mistral-service';
 import { geminiService } from '@/lib/gemini-service';
 import { supabaseServiceBackend } from '@/lib/supabase';
 import { embeddingService } from '@/lib/embeddings';
-import { securityService } from '@/lib/security';
+import { securityService, checkRateLimit } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -17,6 +17,30 @@ export async function POST(request: NextRequest) {
     sessionId: request.headers.get('x-session-id') || undefined,
     userId: request.headers.get('x-user-id') || undefined,
   };
+
+  // Rate limiting check
+  const rateLimitResult = await checkRateLimit(securityContext.ipAddress, {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50 // 50 requests per 15 minutes for medical queries
+  });
+
+  if (!rateLimitResult.allowed) {
+    await securityService.createAuditLog(
+      'rate_limit_exceeded',
+      '/api/rag/chat',
+      securityContext,
+      false,
+      { resetTime: rateLimitResult.resetTime }
+    );
+    
+    return NextResponse.json(
+      { 
+        error: 'Rate limit exceeded. Please try again later.',
+        retryAfter: rateLimitResult.resetTime ? Math.round((rateLimitResult.resetTime - Date.now()) / 1000) : 900
+      },
+      { status: 429 }
+    );
+  }
 
   try {
     const body = await request.json();

@@ -1,7 +1,6 @@
 // HIPAA-Compliant Security Middleware and Utilities
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import rateLimit from 'express-rate-limit';
 
 export interface SecurityConfig {
   enableAuditLogging: boolean;
@@ -342,47 +341,68 @@ export class SecurityService {
     };
   }
 
+  // In-memory rate limiting store (use Redis in production)
+  private rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+
   /**
-   * Rate limiting for medical endpoints
+   * Rate limiting for medical endpoints (Next.js compatible)
    */
-  public createRateLimit(options: {
-    windowMs?: number;
-    max?: number;
-    message?: string;
-    skipSuccessfulRequests?: boolean;
-  } = {}) {
+  public async checkRateLimit(
+    ipAddress: string,
+    options: {
+      windowMs?: number;
+      max?: number;
+    } = {}
+  ): Promise<{ allowed: boolean; resetTime?: number; remaining?: number }> {
     if (!this.config.enableRateLimit) {
-      return (req: any, res: any, next: any) => next();
+      return { allowed: true };
     }
 
-    return rateLimit({
-      windowMs: options.windowMs || 15 * 60 * 1000, // 15 minutes
-      max: options.max || 100, // limit each IP to 100 requests per windowMs
-      message: options.message || 'Too many requests from this IP, please try again later.',
-      skipSuccessfulRequests: options.skipSuccessfulRequests || false,
-      standardHeaders: true,
-      legacyHeaders: false,
-      handler: async (req: any, res: any) => {
-        const context: SecurityContext = {
-          ipAddress: req.ip || 'unknown',
-          userAgent: req.get('user-agent') || 'unknown',
-          timestamp: new Date(),
-        };
+    const windowMs = options.windowMs || 15 * 60 * 1000; // 15 minutes
+    const max = options.max || 100; // 100 requests per window
+    const now = Date.now();
+    const key = this.hashIP(ipAddress);
 
-        await this.createAuditLog(
-          'rate_limit_exceeded',
-          req.path,
-          context,
-          false,
-          { limit: options.max, window: options.windowMs }
-        );
+    // Clean up expired entries
+    this.cleanupRateLimitStore(now);
 
-        res.status(429).json({
-          error: 'Rate limit exceeded',
-          retryAfter: Math.round(options.windowMs! / 1000),
-        });
-      },
-    });
+    const entry = this.rateLimitStore.get(key);
+    
+    if (!entry || now > entry.resetTime) {
+      // New window or expired entry
+      this.rateLimitStore.set(key, {
+        count: 1,
+        resetTime: now + windowMs,
+      });
+      return { allowed: true, remaining: max - 1 };
+    }
+
+    if (entry.count >= max) {
+      // Rate limit exceeded
+      return {
+        allowed: false,
+        resetTime: entry.resetTime,
+        remaining: 0,
+      };
+    }
+
+    // Increment counter
+    entry.count++;
+    return {
+      allowed: true,
+      remaining: max - entry.count,
+    };
+  }
+
+  /**
+   * Clean up expired rate limit entries
+   */
+  private cleanupRateLimitStore(now: number): void {
+    for (const [key, entry] of this.rateLimitStore.entries()) {
+      if (now > entry.resetTime) {
+        this.rateLimitStore.delete(key);
+      }
+    }
   }
 
   /**
@@ -431,3 +451,7 @@ export const securityService = new SecurityService();
 
 // Export middleware for Next.js middleware.ts
 export const withSecurity = securityService.securityMiddleware();
+
+// Export rate limiting helper for API routes
+export const checkRateLimit = (ipAddress: string, options?: { windowMs?: number; max?: number }) => 
+  securityService.checkRateLimit(ipAddress, options);
