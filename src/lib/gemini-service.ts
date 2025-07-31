@@ -59,7 +59,7 @@ export class GeminiService {
     this.config = {
       apiKey: config?.apiKey || process.env.GEMINI_API_KEY || '',
       baseUrl: config?.baseUrl || 'https://generativelanguage.googleapis.com/v1beta',
-      defaultModel: config?.defaultModel || 'gemini-pro',
+      defaultModel: config?.defaultModel || process.env.GEMINI_MODEL || 'gemini-1.5-pro-002',
       maxTokens: config?.maxTokens || 4000,
       temperature: config?.temperature || 0.7,
     };
