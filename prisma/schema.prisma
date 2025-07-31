@@ -13,20 +13,162 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User model for healthcare professionals
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
+  role      String   @default("clinician") // clinician, resident, student, consultant
+  specialty String?  // pediatrics, neonatology, etc.
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Relations
+  chatSessions ChatSession[]
+  settings     UserSettings?
+  
+  @@map("users")
 }
 
-model Post {
+// Chat session model
+model ChatSession {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  title     String?
+  userId    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Relations
+  messages  Message[]
+  user      User?    @relation(fields: [userId], references: [id])
+  
+  @@map("chat_sessions")
+}
+
+// Message model for chat conversations
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  role       String   // user, assistant
+  citations  String?  // JSON array of citation strings
+  sessionId  String
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  session    ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@map("messages")
+}
+
+// Nelson Textbook reference data
+model NelsonReference {
+  id          String   @id @default(cuid())
+  chapter     String
+  section     String?
+  title       String
+  content     String   // Full text content
+  pageNumbers String?  // Page numbers in the textbook
+  edition     String   @default("21st Edition")
+  keywords    String?  // Comma-separated keywords for search
+  embedding   String?  // Vector embedding stored as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("nelson_references")
+}
+
+// Clinical templates for common pediatric scenarios
+model ClinicalTemplate {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // emergency, diagnosis, treatment, etc.
+  description String?
+  template    String   // JSON template structure
+  tags        String?  // Comma-separated tags
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("clinical_templates")
+}
+
+// Drug dosage calculator data
+model DrugDosage {
+  id          String   @id @default(cuid())
+  drugName    String
+  indication  String
+  ageGroup    String   // neonate, infant, child, adolescent
+  dosage      String   // Dosage information (mg/kg/day, etc.)
+  maxDosage   String?  // Maximum dosage
+  frequency   String?  // Dosing frequency
+  notes       String?  // Additional notes
+  citations   String?  // Reference citations
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("drug_dosages")
+}
+
+// Emergency protocols
+model EmergencyProtocol {
+  id          String   @id @default(cuid())
+  title       String
+  category    String   // respiratory, cardiac, trauma, etc.
+  ageGroup    String   // neonate, infant, child, adolescent
+  steps       String   // JSON array of protocol steps
+  medications String?  // JSON array of emergency medications
+  citations   String?  // Reference citations
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("emergency_protocols")
+}
+
+// User settings and preferences
+model UserSettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  theme                String   @default("dark") // dark, light
+  showCitations        Boolean  @default(true)
+  showTimestamps       Boolean  @default(true)
+  autoSaveChats        Boolean  @default(true)
+  voiceInputEnabled    Boolean  @default(false)
+  notificationsEnabled Boolean  @default(true)
+  language             String   @default("en")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  // Relations
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_settings")
+}
+
+// Developmental milestones data
+model DevelopmentalMilestone {
+  id          String   @id @default(cuid())
+  ageRange    String   // e.g., "2-3 months", "1 year"
+  domain      String   // motor, language, social, cognitive
+  milestone   String
+  description String?
+  redFlags    String?  // JSON array of warning signs
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("developmental_milestones")
+}
+
+// Vaccine schedule data
+model VaccineSchedule {
+  id          String   @id @default(cuid())
+  vaccineName String
+  age         String   // e.g., "2 months", "4-6 years"
+  doseNumber  Int      // 1, 2, 3, etc.
+  schedule    String   // Routine, catch-up, special circumstances
+  indications String?  // Specific indications
+  contraindications String? // Contraindications
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("vaccine_schedules")
 }
