@@ -529,16 +529,24 @@ export class EnhancedLangGraphWorkflow {
       timeout: 15000,
     });
   }
+
+  private initializeEdges() {
     this.edges = [
+      { from: 'security_validation', to: 'query_analysis' },
       { from: 'query_analysis', to: 'document_retrieval' },
       { from: 'document_retrieval', to: 'clinical_assessment' },
       { from: 'clinical_assessment', to: 'response_generation' },
-      { from: 'response_generation', to: 'quality_check' },
+      { from: 'response_generation', to: 'quality_finalization' },
+      { from: 'quality_finalization', to: 'validation_completion' }
     ];
   }
 
-  async execute(query: string): Promise<WorkflowState> {
-    const state: WorkflowState = { query };
+  async execute(query: string, medicalContext?: Partial<MedicalContext>, sessionId?: string): Promise<EnhancedWorkflowState> {
+    const state: EnhancedWorkflowState = { 
+      query,
+      medicalContext,
+      sessionId 
+    };
     const visitedNodes = new Set<string>();
     
     try {
@@ -788,4 +796,4 @@ Recommendation: ${confidence > 0.7 ? 'Sufficient information available for relia
 }
 
 // Export singleton instance
-export const langGraphWorkflow = new LangGraphWorkflow();
+export const langGraphWorkflow = new EnhancedLangGraphWorkflow();
