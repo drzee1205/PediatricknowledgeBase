@@ -796,4 +796,4 @@ Recommendation: ${confidence > 0.7 ? 'Sufficient information available for relia
 }
 
 // Export singleton instance
-export const langGraphWorkflow = new LangGraphWorkflow();
+export const langGraphWorkflow = new EnhancedLangGraphWorkflow();
