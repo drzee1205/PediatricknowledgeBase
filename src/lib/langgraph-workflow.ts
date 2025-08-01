@@ -529,7 +529,10 @@ export class EnhancedLangGraphWorkflow {
       timeout: 15000,
     });
   }
+
+  private initializeEdges() {
     this.edges = [
+      { from: 'security_validation', to: 'query_analysis' },
       { from: 'query_analysis', to: 'document_retrieval' },
       { from: 'document_retrieval', to: 'clinical_assessment' },
       { from: 'clinical_assessment', to: 'response_generation' },
