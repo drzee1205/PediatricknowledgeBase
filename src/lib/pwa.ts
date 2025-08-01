@@ -292,7 +292,7 @@ export function getNetworkInfo(): {
   online: boolean;
 } {
   if (typeof window === 'undefined') {
-    return { online: navigator.onLine };
+    return { online: false }; // Default to offline on server-side
   }
   
   const connection = (navigator as any).connection;
